@@ -233,8 +233,8 @@ export default function ToolPerformance() {
               <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
               <Bar
                 dataKey="total_tool_call_success_percentage"
-                shape={(props: Record<string, unknown>) => {
-                  const entry = props as unknown as { x: number; y: number; width: number; height: number; ceo_slug: string; fillColor: string };
+                shape={(props: unknown) => {
+                  const entry = props as { x: number; y: number; width: number; height: number; ceo_slug: string; fillColor: string };
                   return (
                     <CustomBarShape
                       x={entry.x}

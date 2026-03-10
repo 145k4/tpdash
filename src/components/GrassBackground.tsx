@@ -338,7 +338,12 @@ function FullscreenSky() {
 
   const skyTexture = useMemo(() => {
     const loader = new THREE.TextureLoader();
-    const tex = loader.load("/sky.jpg");
+    const tex = loader.load(
+      "/sky.jpg",
+      undefined,
+      undefined,
+      (err) => { console.error("Failed to load sky texture:", err); }
+    );
     tex.colorSpace = THREE.LinearSRGBColorSpace; // Keep raw colors — no linearization
     tex.minFilter = THREE.LinearFilter;
     tex.magFilter = THREE.LinearFilter;
@@ -479,7 +484,7 @@ function Scene() {
   // Set the clear color to match sky texture horizon so no black shows
   const { gl } = useThree();
   useMemo(() => {
-    gl.setClearColor(new THREE.Color(0.55, 0.60, 0.70), 1);
+    gl.setClearColor(new THREE.Color(0.55, 0.60, 0.70), 0);
   }, [gl]);
 
   return (
@@ -509,6 +514,7 @@ export default function GrassBackground({ className }: GrassBackgroundProps) {
         height: "100%",
         borderRadius: "inherit",
         overflow: "hidden",
+        background: "linear-gradient(180deg, #3a4a5c 0%, #2e5a28 60%, #1f3a2a 100%)",
       }}
     >
       <Canvas

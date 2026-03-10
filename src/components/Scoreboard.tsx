@@ -29,7 +29,7 @@ interface ScoreboardEntry {
 }
 
 function ProviderLogo({ slug }: { slug: string }) {
-  const baseClass = "absolute w-[130px] h-[130px] opacity-[0.30] -left-6 top-1/2 -translate-y-1/2 pointer-events-none";
+  const baseClass = "absolute w-[100px] h-[100px] opacity-[0.15] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none";
   switch (slug) {
     case "chatgpt":
       return (
@@ -138,17 +138,15 @@ export default function Scoreboard() {
 
   if (loading && entries.length === 0) {
     return (
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {CEO_SLUGS.map((slug) => (
           <div
             key={slug}
-            className="rounded-2xl border border-[#2a2a2a] bg-[#141414] p-4 relative overflow-hidden flex flex-col gap-3 animate-pulse"
+            className="rounded-2xl border border-[#2a2a2a] bg-[#141414] p-4 relative overflow-hidden flex flex-col items-center gap-3 animate-pulse"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-24 h-24 rounded-full bg-[#2a2a2a] shrink-0" />
-              <div className="flex-1 h-12 bg-[#2a2a2a] rounded-lg" />
-            </div>
-            <div className="h-16 bg-[#2a2a2a] rounded-xl w-full" />
+            <div className="w-16 h-16 rounded-full bg-[#2a2a2a] shrink-0" />
+            <div className="w-full h-8 bg-[#2a2a2a] rounded-lg" />
+            <div className="h-14 bg-[#2a2a2a] rounded-xl w-full" />
           </div>
         ))}
       </div>
@@ -158,30 +156,28 @@ export default function Scoreboard() {
   if (entries.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {entries.map((entry) => (
         <div
           key={entry.ceo_slug}
-          className="rounded-2xl border border-[#2a2a2a] bg-[#141414] p-4 relative overflow-hidden flex flex-col gap-3"
+          className="rounded-2xl border border-[#2a2a2a] bg-[#141414] p-4 relative overflow-hidden flex flex-col items-center gap-2"
         >
           <ProviderLogo slug={entry.ceo_slug} />
-          <div className="flex items-center gap-4 relative z-10">
-            <img
-              src={CEO_AVATARS[entry.ceo_slug]}
-              alt={entry.ceo_name}
-              className="w-24 h-24 rounded-full object-cover shrink-0"
-            />
-            <div className="flex-1 min-w-0 text-right">
-              <p className="font-semibold text-white text-sm leading-tight">{entry.ceo_name}</p>
-              <p className="text-xs text-[#888] leading-tight mt-0.5">{entry.model || entry.provider || entry.ceo_slug}</p>
-            </div>
+          <img
+            src={CEO_AVATARS[entry.ceo_slug]}
+            alt={entry.ceo_name}
+            className="w-16 h-16 rounded-full object-cover shrink-0 relative z-10"
+          />
+          <div className="text-center relative z-10">
+            <p className="font-semibold text-white text-sm leading-tight">{entry.ceo_name}</p>
+            <p className="text-[11px] text-[#888] leading-tight mt-0.5">{entry.model || entry.provider || entry.ceo_slug}</p>
           </div>
-          <div className="liquid-glass rounded-xl px-3 py-2 w-full relative z-10">
+          <div className="liquid-glass rounded-xl px-3 py-2 w-full relative z-10 text-center">
             <span className="text-[10px] text-white font-bold uppercase tracking-wider italic">PnL</span>
-            <p className={`text-3xl font-bold ${entry.avg_pnl_percent >= 0 ? "text-[#81c784]" : "text-[#e57373]"}`}>
+            <p className={`text-2xl font-bold ${entry.avg_pnl_percent >= 0 ? "text-[#81c784]" : "text-[#e57373]"}`}>
               {formatPercent(entry.avg_pnl_percent)}
             </p>
-            <p className="text-sm text-[#888]">{formatUsd(entry.total_pnl_usd)}</p>
+            <p className="text-xs text-[#888]">{formatUsd(entry.total_pnl_usd)}</p>
           </div>
         </div>
       ))}
