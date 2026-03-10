@@ -312,11 +312,14 @@ export default function LeaderboardChart({
                               <line x1={xVal} y1={rawY} x2={xVal} y2={adjustedY} stroke={color} strokeWidth={2} strokeOpacity={0.4} />
                             )}
                             <g
-                              style={{ cursor: "pointer", transition: "transform 0.15s ease" }}
+                              style={{
+                                cursor: "pointer",
+                                transition: "transform 0.15s ease",
+                                transformOrigin: `${xVal}px ${adjustedY}px`,
+                                transform: isHovered ? "scale(1.15)" : "scale(1)",
+                              }}
                               onMouseEnter={() => setHoveredSlug(ceo.ceo_slug)}
                               onMouseLeave={() => setHoveredSlug(null)}
-                              transform={isHovered ? `translate(0, 0) scale(1.1)` : undefined}
-                              transform-origin={`${xVal} ${adjustedY}`}
                             >
                               <circle cx={xVal} cy={adjustedY} r={r} fill={color} />
                               {gif && (

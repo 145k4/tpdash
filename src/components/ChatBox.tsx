@@ -33,10 +33,53 @@ const CEO_COLORS: Record<string, string> = {
   grok: "#f39c12",
 };
 
+const MENTION_SLUGS: Record<string, string> = {
+  chatgpt: "chatgpt",
+  claude: "claude",
+  gemini: "gemini",
+  grok: "grok",
+};
+
 export default function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([]);
   const filter = "chat" as const;
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollToLastMessage = (slug: string) => {
+    if (!scrollRef.current) return;
+    const container = scrollRef.current;
+    const els = container.querySelectorAll(`[data-ceo-slug="${slug}"]`);
+    if (els.length > 0) {
+      const last = els[els.length - 1];
+      last.scrollIntoView({ behavior: "smooth", block: "center" });
+      last.classList.add("bg-white/10");
+      setTimeout(() => last.classList.remove("bg-white/10"), 1500);
+    }
+  };
+
+  const renderContent = (content: string, msgIndex: number) => {
+    const parts = content.split(/(@\w+)/g);
+    return parts.map((part, i) => {
+      const match = part.match(/^@(\w+)$/);
+      if (match) {
+        const slug = match[1].toLowerCase();
+        if (MENTION_SLUGS[slug]) {
+          const mentionColor = CEO_COLORS[slug] || "#888";
+          return (
+            <span
+              key={`${msgIndex}-${i}`}
+              className="font-bold cursor-pointer hover:underline"
+              style={{ color: mentionColor }}
+              onClick={() => scrollToLastMessage(slug)}
+            >
+              {part}
+            </span>
+          );
+        }
+      }
+      return <span key={`${msgIndex}-${i}`}>{part}</span>;
+    });
+  };
 
   useEffect(() => {
     async function fetchMessages() {
@@ -92,7 +135,7 @@ export default function ChatBox() {
       {/* Messages stream */}
       <div
         ref={scrollRef}
-        className="max-h-[280px] overflow-y-auto px-3 py-2 space-y-0.5"
+        className="max-h-[400px] overflow-y-auto px-3 py-2 space-y-0.5"
         style={{
           maskImage: "linear-gradient(to bottom, transparent 0%, black 3%, black 97%, transparent 100%)",
           WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 3%, black 97%, transparent 100%)",
@@ -103,7 +146,7 @@ export default function ChatBox() {
             No messages yet...
           </div>
         ) : (
-          filtered.map((msg) => {
+          filtered.map((msg, idx) => {
             const name = CEO_NAMES[msg.ceo_slug] || msg.ceo_slug;
             const color = CEO_COLORS[msg.ceo_slug] || "#888";
             const avatar = CEO_AVATARS[msg.ceo_slug] || "/claude.png";
@@ -112,6 +155,7 @@ export default function ChatBox() {
             return (
               <div
                 key={msg.id}
+                data-ceo-slug={msg.ceo_slug}
                 className="group flex items-start gap-0 py-1 px-1 rounded hover:bg-[#ffffff06] transition-colors"
               >
                 <span className="text-[10px] text-[#333] w-8 flex-shrink-0 pt-0.5 text-right mr-2 font-mono">
@@ -127,7 +171,7 @@ export default function ChatBox() {
                     {name}
                   </span>
                   <span className="text-xs leading-relaxed text-[#999]">
-                    {msg.content}
+                    {renderContent(msg.content, idx)}
                   </span>
                 </div>
               </div>
