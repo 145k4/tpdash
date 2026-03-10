@@ -12,10 +12,17 @@ const CEO_AVATARS: Record<string, string> = {
 };
 
 const CEO_NAMES: Record<string, string> = {
-  chatgpt: "ChiefGPT",
+  chatgpt: "CashGPT",
   claude: "Claudius Capital",
   gemini: "Gem Street",
   grok: "Grokefeller",
+};
+
+const CEO_COLORS: Record<string, string> = {
+  chatgpt: "#2ecc71",
+  claude: "#e74c3c",
+  gemini: "#3498db",
+  grok: "#f39c12",
 };
 
 interface ScoreboardEntry {
@@ -157,31 +164,35 @@ export default function Scoreboard() {
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {entries.map((entry) => (
-        <div
-          key={entry.ceo_slug}
-          className="rounded-2xl border border-[#2a2a2a] bg-[#141414] p-4 relative overflow-hidden flex flex-col items-center gap-2"
-        >
-          <ProviderLogo slug={entry.ceo_slug} />
-          <img
-            src={CEO_AVATARS[entry.ceo_slug]}
-            alt={entry.ceo_name}
-            className="w-32 h-32 rounded-full object-cover shrink-0 relative z-10"
-            style={{ imageRendering: "pixelated" }}
-          />
-          <div className="text-center relative z-10">
-            <p className="font-bold text-white text-base leading-tight">{entry.ceo_name}</p>
-            <p className="text-xs text-[#888] leading-tight mt-0.5">{entry.model || entry.provider || entry.ceo_slug}</p>
+      {entries.map((entry) => {
+        const color = CEO_COLORS[entry.ceo_slug] || "#888";
+        return (
+          <div
+            key={entry.ceo_slug}
+            className="rounded-2xl bg-[#141414] p-4 relative overflow-hidden flex flex-col items-center gap-2"
+            style={{ border: `1px solid ${color}33` }}
+          >
+            <ProviderLogo slug={entry.ceo_slug} />
+            <img
+              src={CEO_AVATARS[entry.ceo_slug]}
+              alt={entry.ceo_name}
+              className="w-32 h-32 rounded-full object-cover shrink-0 relative z-10"
+              style={{ imageRendering: "pixelated", boxShadow: `0 0 20px ${color}30` }}
+            />
+            <div className="text-center relative z-10">
+              <p className="font-bold text-base leading-tight" style={{ color }}>{entry.ceo_name}</p>
+              <p className="text-xs text-[#888] leading-tight mt-0.5">{entry.model || entry.provider || entry.ceo_slug}</p>
+            </div>
+            <div className="liquid-glass rounded-xl px-3 py-2 w-full relative z-10 text-center">
+              <span className="text-[10px] font-bold uppercase tracking-wider italic" style={{ color }}>PnL</span>
+              <p className={`text-2xl font-bold ${entry.avg_pnl_percent >= 0 ? "text-[#81c784]" : "text-[#e57373]"}`}>
+                {formatPercent(entry.avg_pnl_percent)}
+              </p>
+              <p className="text-xs text-[#888]">{formatUsd(entry.total_pnl_usd)}</p>
+            </div>
           </div>
-          <div className="liquid-glass rounded-xl px-3 py-2 w-full relative z-10 text-center">
-            <span className="text-[10px] text-white font-bold uppercase tracking-wider italic">PnL</span>
-            <p className={`text-2xl font-bold ${entry.avg_pnl_percent >= 0 ? "text-[#81c784]" : "text-[#e57373]"}`}>
-              {formatPercent(entry.avg_pnl_percent)}
-            </p>
-            <p className="text-xs text-[#888]">{formatUsd(entry.total_pnl_usd)}</p>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
