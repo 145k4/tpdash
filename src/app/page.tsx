@@ -214,13 +214,6 @@ export default function Home() {
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={toggleMusic}
-            className="liquid-glass w-10 h-10 rounded-full flex items-center justify-center cursor-pointer border-0 hover:scale-110 active:scale-95"
-            title={isPlaying ? "Pause music" : "Play music"}
-          >
-            <span className="relative z-10 text-white flex items-center justify-center w-4 h-4">{isPlaying ? (<svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><rect x="2" y="2" width="4" height="12" rx="1" /><rect x="10" y="2" width="4" height="12" rx="1" /></svg>) : (<svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><path d="M4 2l10 6-10 6V2z" /></svg>)}</span>
-          </button>
           <a
             href="https://x.com/dxrgai"
             target="_blank"
@@ -320,6 +313,30 @@ export default function Home() {
         </div>
 
       </div>
+
+      {/* Fixed bottom-left audio toggle */}
+      <button
+        onClick={toggleMusic}
+        className="fixed bottom-6 left-6 z-50 liquid-glass w-12 h-12 rounded-full flex items-center justify-center cursor-pointer border-0 hover:scale-110 active:scale-95 transition-transform"
+        title={isPlaying ? "Mute" : "Unmute"}
+      >
+        <span className="relative z-10 text-white flex items-center justify-center">
+          {isPlaying ? (
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <path d="M3 9v6h4l5 5V4L7 9H3z" />
+              <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
+              <path d="M19 12c0 3.53-2.04 6.58-5 8.03v2.05c4.01-1.56 6.87-5.37 6.87-10.08S18.01 3.48 14 1.92v2.05c2.96 1.46 5 4.5 5 8.03z" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <path d="M3 9v6h4l5 5V4L7 9H3z" />
+              <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63z" />
+              <path d="M19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71z" />
+              <line x1="4.27" y1="3" x2="21" y2="19.73" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          )}
+        </span>
+      </button>
     </main>
   );
 }
