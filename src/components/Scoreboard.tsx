@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import CeoPortfolio from "./CeoPortfolio";
 
 const CEO_SLUGS = ["chatgpt", "claude", "gemini", "grok"] as const;
 
@@ -12,11 +13,30 @@ const CEO_AVATARS: Record<string, string> = {
 };
 
 const CEO_NAMES: Record<string, string> = {
-  chatgpt: "ChiefGPT",
+  chatgpt: "CashGPT",
   claude: "Claudius Capital",
   gemini: "Gem Street",
   grok: "Grokefeller",
 };
+
+const CEO_COLORS: Record<string, string> = {
+  chatgpt: "#2ecc71",
+  claude: "#e74c3c",
+  gemini: "#3498db",
+  grok: "#f39c12",
+};
+
+interface VaultEntry {
+  managed_vault_id: number;
+  agent_label: string;
+  vault_address: string;
+  latest_pnl_usd: number;
+  total_intent_count: number;
+  total_intent_success_count: number;
+  total_intent_failure_count: number;
+  total_tool_call_success_percentage: number;
+  total_swap_count: number;
+}
 
 interface ScoreboardEntry {
   ceo_slug: string;
@@ -26,10 +46,11 @@ interface ScoreboardEntry {
   total_pnl_usd: number;
   total_value_usd: number;
   avg_pnl_percent: number;
+  vaults: VaultEntry[];
 }
 
 function ProviderLogo({ slug }: { slug: string }) {
-  const baseClass = "absolute w-[130px] h-[130px] opacity-[0.30] -left-6 top-1/2 -translate-y-1/2 pointer-events-none";
+  const baseClass = "absolute w-[100px] h-[100px] opacity-[0.06] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none";
   switch (slug) {
     case "chatgpt":
       return (
@@ -75,18 +96,30 @@ function formatUsd(value: number): string {
 export default function Scoreboard() {
   const [entries, setEntries] = useState<ScoreboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [sbRes, vaultsRes] = await Promise.all([
+        const [sbRes, vaultsRes, tpRes] = await Promise.all([
           fetch("/api/scoreboard"),
           fetch("/api/vaults"),
+          fetch("/api/tool-performance"),
         ]);
         const sbJson = await sbRes.json();
         const vaultsJson = await vaultsRes.json();
+        const tpJson = await tpRes.json();
 
         if (!sbJson.success || !vaultsJson.success) return;
+
+        const tpBySlug: Record<string, { vaults: VaultEntry[] }> = {};
+        if (tpJson.success && Array.isArray(tpJson.data)) {
+          for (const item of tpJson.data) {
+            const slug = item.ceo_slug as string;
+            if (!slug) continue;
+            tpBySlug[slug] = { vaults: Array.isArray(item.vaults) ? item.vaults : [] };
+          }
+        }
 
         const nameMap: Record<string, { ceo_name: string; provider: string; model: string }> = {};
         for (const entry of sbJson.data || []) {
@@ -120,6 +153,7 @@ export default function Scoreboard() {
             total_pnl_usd: v.total_pnl_usd,
             total_value_usd: v.total_value_usd,
             avg_pnl_percent: v.avg_pnl_percent,
+            vaults: tpBySlug[slug]?.vaults || [],
           };
         });
 
@@ -132,23 +166,21 @@ export default function Scoreboard() {
     }
 
     fetchData();
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, []);
 
   if (loading && entries.length === 0) {
     return (
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {CEO_SLUGS.map((slug) => (
           <div
             key={slug}
-            className="rounded-2xl border border-[#2a2a2a] bg-[#141414] p-4 relative overflow-hidden flex flex-col gap-3 animate-pulse"
+            className="rounded-2xl border border-[#2a2a2a] bg-[#141414] p-4 relative overflow-hidden flex flex-col items-center gap-3 animate-pulse"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-24 h-24 rounded-full bg-[#2a2a2a] shrink-0" />
-              <div className="flex-1 h-12 bg-[#2a2a2a] rounded-lg" />
-            </div>
-            <div className="h-16 bg-[#2a2a2a] rounded-xl w-full" />
+            <div className="w-16 h-16 rounded-full bg-[#2a2a2a] shrink-0" />
+            <div className="w-full h-8 bg-[#2a2a2a] rounded-lg" />
+            <div className="h-14 bg-[#2a2a2a] rounded-xl w-full" />
           </div>
         ))}
       </div>
@@ -158,33 +190,65 @@ export default function Scoreboard() {
   if (entries.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {entries.map((entry) => (
-        <div
-          key={entry.ceo_slug}
-          className="rounded-2xl border border-[#2a2a2a] bg-[#141414] p-4 relative overflow-hidden flex flex-col gap-3"
-        >
-          <ProviderLogo slug={entry.ceo_slug} />
-          <div className="flex items-center gap-4 relative z-10">
-            <img
-              src={CEO_AVATARS[entry.ceo_slug]}
-              alt={entry.ceo_name}
-              className="w-24 h-24 rounded-full object-cover shrink-0"
-            />
-            <div className="flex-1 min-w-0 text-right">
-              <p className="font-semibold text-white text-sm leading-tight">{entry.ceo_name}</p>
-              <p className="text-xs text-[#888] leading-tight mt-0.5">{entry.model || entry.provider || entry.ceo_slug}</p>
+    <>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {entries.map((entry) => {
+          const color = CEO_COLORS[entry.ceo_slug] || "#888";
+          return (
+            <div
+              key={entry.ceo_slug}
+              className="rounded-2xl bg-[#141414] px-3 py-3 relative overflow-hidden flex flex-col"
+              style={{ border: `1px solid ${color}33` }}
+            >
+              <div className="flex items-center gap-3">
+                <ProviderLogo slug={entry.ceo_slug} />
+                <img
+                  src={CEO_AVATARS[entry.ceo_slug]}
+                  alt={entry.ceo_name}
+                  className="w-16 h-16 object-contain shrink-0 relative z-10"
+                  style={{ imageRendering: "pixelated" }}
+                />
+                <div className="flex-1 min-w-0 relative z-10">
+                  <p className="font-bold text-sm leading-tight truncate" style={{ color }}>{entry.ceo_name}</p>
+                  <p className="text-[11px] text-[#999] font-medium leading-tight mt-0.5 truncate">{entry.model || entry.provider || entry.ceo_slug}</p>
+                  <div className="mt-1.5">
+                    <p className={`text-2xl font-extrabold leading-none ${entry.avg_pnl_percent >= 0 ? "text-[#81c784]" : "text-[#e57373]"}`}>
+                      {formatPercent(entry.avg_pnl_percent)}
+                    </p>
+                    <p className="text-xs text-white font-bold mt-0.5">{formatUsd(entry.total_pnl_usd)}</p>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setExpandedSlug(expandedSlug === entry.ceo_slug ? null : entry.ceo_slug)}
+                className="mt-2 w-full relative z-10 py-1.5 rounded-lg border border-[#2a2a2a] hover:border-[#444] hover:bg-[#1a1a1a] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                style={{ borderColor: expandedSlug === entry.ceo_slug ? `${color}55` : undefined }}
+                aria-label={expandedSlug === entry.ceo_slug ? "Collapse portfolio" : "Expand portfolio"}
+              >
+                <span className="text-[10px] text-[#666] font-bold uppercase tracking-wider">
+                  {expandedSlug === entry.ceo_slug ? "Hide" : "Team"}
+                </span>
+                <svg className={`w-3.5 h-3.5 transition-transform ${expandedSlug === entry.ceo_slug ? "rotate-180" : ""}`} style={{ color }} viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                </svg>
+              </button>
             </div>
-          </div>
-          <div className="liquid-glass rounded-xl px-3 py-2 w-full relative z-10">
-            <span className="text-[10px] text-white font-bold uppercase tracking-wider italic">PnL</span>
-            <p className={`text-3xl font-bold ${entry.avg_pnl_percent >= 0 ? "text-[#81c784]" : "text-[#e57373]"}`}>
-              {formatPercent(entry.avg_pnl_percent)}
-            </p>
-            <p className="text-sm text-[#888]">{formatUsd(entry.total_pnl_usd)}</p>
-          </div>
-        </div>
-      ))}
-    </div>
+          );
+        })}
+      </div>
+      {expandedSlug && (() => {
+        const entry = entries.find(e => e.ceo_slug === expandedSlug);
+        if (!entry) return null;
+        return (
+          <CeoPortfolio
+            ceoSlug={entry.ceo_slug}
+            ceoName={entry.ceo_name}
+            color={CEO_COLORS[entry.ceo_slug] || "#888"}
+            vaults={entry.vaults}
+            onClose={() => setExpandedSlug(null)}
+          />
+        );
+      })()}
+    </>
   );
 }
